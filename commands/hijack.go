@@ -213,9 +213,25 @@ func performHijack(hijackReq *http.Request, tlsConfig *tls.Config) int {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		log.Println("bad response when hijacking:")
+		var errorContext string = "bad response when hijacking"
+		var errorMessage string
+
+		if resp.StatusCode == http.StatusNotFound {
+			errorMessage = "no containers matched your search parameters"
+		} else if resp.StatusCode == http.StatusMultipleChoices {
+			errorContext = "more than one matching container was found"
+			err = json.NewDecoder(resp.Body).Decode(&errorMessage)
+			if err != nil {
+				log.Fatalln("failed to decode message:", err)
+			}
+		} else {
+			var errorMessageBuf bytes.Buffer
+			resp.Write(&errorMessageBuf)
+			errorMessage = errorMessageBuf.String()
+		}
+
+		log.Println(errorContext + ":\n" + errorMessage)
 		resp.Body.Close()
-		resp.Write(os.Stderr)
 		os.Exit(1)
 	}
 

@@ -24,7 +24,6 @@ var _ = Describe("Hijacking", func() {
 	BeforeEach(func() {
 		atcServer = ghttp.NewServer()
 		hijacked = nil
-
 	})
 
 	hijackHandler := func(didHijack chan<- struct{}, rawQuery []string, errorMessages []string) http.HandlerFunc {
@@ -149,6 +148,106 @@ var _ = Describe("Hijacking", func() {
 
 		It("hijacks the most recent one-off build with a more politically correct command", func() {
 			fly("intercept")
+		})
+	})
+
+	Context("when I have more then one matching container", func() {
+		BeforeEach(func() {
+			didHijack := make(chan struct{})
+			hijacked = didHijack
+
+			atcServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/builds"),
+					ghttp.RespondWithJSONEncoded(200, []atc.Build{
+						{ID: 4, Name: "1", Status: "started", JobName: "some-job"},
+						{ID: 3, Name: "3", Status: "started"},
+						{ID: 2, Name: "2", Status: "started"},
+						{ID: 1, Name: "1", Status: "finished"},
+					}),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/api/v1/hijack", "build-id=3&name=build"),
+					ghttp.RespondWithJSONEncoded(300, "Mystery Container, Fun Container"),
+				),
+			)
+		})
+
+		It("Display a list of matching containers", func() {
+			flyCmd := exec.Command(flyPath, "-t", atcServer.URL(), "hijack")
+			sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
+			Ω(err).ShouldNot(HaveOccurred())
+
+			Eventually(sess).Should(gexec.Exit(1))
+
+			Ω(sess.Err).Should(gbytes.Say("more than one matching container was found:"))
+			Ω(sess.Err).Should(gbytes.Say("Mystery Container, Fun Container"))
+		})
+	})
+
+	Context("when the server returns a 404 ", func() {
+		BeforeEach(func() {
+			didHijack := make(chan struct{})
+			hijacked = didHijack
+
+			atcServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/builds"),
+					ghttp.RespondWithJSONEncoded(200, []atc.Build{
+						{ID: 4, Name: "1", Status: "started", JobName: "some-job"},
+						{ID: 3, Name: "3", Status: "started"},
+						{ID: 2, Name: "2", Status: "started"},
+						{ID: 1, Name: "1", Status: "finished"},
+					}),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/api/v1/hijack", "build-id=3&name=build"),
+					ghttp.RespondWithJSONEncoded(404, []atc.Build{}),
+				),
+			)
+		})
+
+		It("displays a nice error message", func() {
+			flyCmd := exec.Command(flyPath, "-t", atcServer.URL(), "hijack")
+			sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
+			Ω(err).ShouldNot(HaveOccurred())
+
+			Eventually(sess).Should(gexec.Exit(1))
+
+			Ω(sess.Err).Should(gbytes.Say("no containers matched your search parameters"))
+		})
+	})
+
+	Context("when the server throws a 500", func() {
+		BeforeEach(func() {
+			didHijack := make(chan struct{})
+			hijacked = didHijack
+
+			atcServer.AppendHandlers(
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("GET", "/api/v1/builds"),
+					ghttp.RespondWithJSONEncoded(200, []atc.Build{
+						{ID: 4, Name: "1", Status: "started", JobName: "some-job"},
+						{ID: 3, Name: "3", Status: "started"},
+						{ID: 2, Name: "2", Status: "started"},
+						{ID: 1, Name: "1", Status: "finished"},
+					}),
+				),
+				ghttp.CombineHandlers(
+					ghttp.VerifyRequest("POST", "/api/v1/hijack", "build-id=3&name=build"),
+					ghttp.RespondWithJSONEncoded(500, []atc.Build{}),
+				),
+			)
+		})
+
+		It("displays the 500 error", func() {
+			flyCmd := exec.Command(flyPath, "-t", atcServer.URL(), "hijack")
+			sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
+			Ω(err).ShouldNot(HaveOccurred())
+
+			Eventually(sess).Should(gexec.Exit(1))
+
+			Ω(sess.Err).Should(gbytes.Say("HTTP/1.1 500 Internal Server Error"))
 		})
 	})
 
