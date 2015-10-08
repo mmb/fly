@@ -12,10 +12,11 @@ import (
 )
 
 type targetProps struct {
-	API      string `yaml:"api"`
-	Username string
-	Password string
-	Cert     string
+	API                       string `yaml:"api"`
+	Username                  string
+	Password                  string
+	Cert                      string
+	GithubPersonalAccessToken string
 }
 
 type TargetDetailsYAML struct {
@@ -44,12 +45,7 @@ func createTargets(location string, c *cli.Context) {
 
 	targetsBytes, err := yaml.Marshal(&TargetDetailsYAML{
 		Targets: map[string]targetProps{
-			targetName: {
-				API:      c.String("api"),
-				Username: c.String("username"),
-				Password: c.String("password"),
-				Cert:     c.String("cert"),
-			},
+			targetName: populateTargetProps(c),
 		},
 	})
 	if err != nil {
@@ -65,13 +61,7 @@ func createTargets(location string, c *cli.Context) {
 
 func updateTargets(location string, c *cli.Context) {
 	targetToUpdate := c.Args().First()
-	yamlToSet := targetProps{
-		API:      c.String("api"),
-		Username: c.String("username"),
-		Password: c.String("password"),
-		Cert:     c.String("cert"),
-	}
-
+	yamlToSet := populateTargetProps(c)
 	currentTargetsBytes, err := ioutil.ReadFile(location)
 	if err != nil {
 		log.Fatalln("could not read .flyrc")
@@ -97,5 +87,15 @@ func updateTargets(location string, c *cli.Context) {
 	if err != nil {
 		log.Fatalln("could not write .flyrc")
 		return
+	}
+}
+
+func populateTargetProps(c *cli.Context) targetProps {
+	return targetProps{
+		API:      c.String("api"),
+		Username: c.String("username"),
+		Password: c.String("password"),
+		Cert:     c.String("cert"),
+		GithubPersonalAccessToken: c.String("github-personal-access-token"),
 	}
 }

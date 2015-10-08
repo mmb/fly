@@ -241,7 +241,7 @@ func Hijack(c *cli.Context) {
 	path, args := remoteCommand(c.Args())
 	privileged := true
 
-	reqGenerator := rata.NewRequestGenerator(target, atc.Routes)
+	reqGenerator := rata.NewRequestGenerator(target.URL, atc.Routes)
 	tlsConfig := &tls.Config{InsecureSkipVerify: insecure}
 
 	var ttySpec *atc.HijackTTYSpec

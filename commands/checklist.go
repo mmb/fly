@@ -21,7 +21,7 @@ func Checklist(c *cli.Context) {
 
 	atcRequester := newAtcRequester(rawTarget, insecure)
 
-	printCheckfile(pipelineName, getConfig(pipelineName, atcRequester), newTarget(rawTarget))
+	printCheckfile(pipelineName, getConfig(pipelineName, atcRequester), newTarget(rawTarget.URL))
 }
 
 func printCheckfile(pipelineName string, config atc.Config, au target) {

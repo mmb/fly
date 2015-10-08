@@ -139,6 +139,11 @@ var certFlag = cli.StringFlag{
 	Usage: "directory to your cert",
 }
 
+var githubPersonalAccessTokenFlag = cli.StringFlag{
+	Name:  "github-personal-access-token",
+	Usage: "generated token from github to authenticate",
+}
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "fly"
@@ -206,6 +211,7 @@ func main() {
 				usernameFlag,
 				passwordFlag,
 				certFlag,
+				githubPersonalAccessTokenFlag,
 			},
 		},
 		{

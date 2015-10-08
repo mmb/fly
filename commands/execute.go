@@ -440,11 +440,11 @@ type atcRequester struct {
 	httpClient *http.Client
 }
 
-func newAtcRequester(target string, insecure bool) *atcRequester {
+func newAtcRequester(target Target, insecure bool) *atcRequester {
 	tlsClientConfig := &tls.Config{InsecureSkipVerify: insecure}
 
 	return &atcRequester{
-		rata.NewRequestGenerator(target, atc.Routes),
+		rata.NewRequestGenerator(target.URL, atc.Routes),
 		&http.Client{Transport: &http.Transport{TLSClientConfig: tlsClientConfig}},
 	}
 }

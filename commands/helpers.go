@@ -48,13 +48,17 @@ func getConfig(pipelineName string, atcRequester *atcRequester) atc.Config {
 	return config
 }
 
-func returnTarget(startingTarget string) string {
+type Target struct {
+	URL string
+}
+
+func returnTarget(startingTarget string) Target {
 	target := lookupURLFromName(startingTarget)
 	if target == "" {
 		target = startingTarget
 	}
 
-	return strings.TrimRight(target, "/")
+	return Target{URL: strings.TrimRight(target, "/")}
 }
 
 func lookupURLFromName(targetName string) string {

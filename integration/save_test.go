@@ -122,7 +122,7 @@ targets:
 				flyCmd := exec.Command(flyPath, "save-target", "--api",
 					"http://some-target", "--username", "some-username",
 					"--password", "some-password", "--cert", "~/path/to/cert",
-					"some-update-target",
+					"some-update-target", "-",
 				)
 
 				sess, err := gexec.Start(flyCmd, GinkgoWriter, GinkgoWriter)
@@ -143,9 +143,12 @@ targets:
 
 		Context("and the target is already saved", func() {
 			It("should update the target", func() {
-				flyCmd := exec.Command(flyPath, "save-target", "--api",
-					"http://some-target", "--username", "some-username",
-					"--password", "some-password", "--cert", "~/path/to/cert",
+				flyCmd := exec.Command(flyPath, "save-target",
+					"--api", "http://some-target",
+					"--username", "some-username",
+					"--password", "some-password",
+					"--cert", "~/path/to/cert",
+					"--github-personal-access-token", "some-token",
 					"some-update-target",
 				)
 
@@ -153,9 +156,12 @@ targets:
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(sess).Should(gexec.Exit(0))
 
-				flyCmd = exec.Command(flyPath, "save-target", "--api",
-					"http://a-different-target", "--username", "some-username",
-					"--password", "stuff", "--cert", "~/path/to/different/cert",
+				flyCmd = exec.Command(flyPath, "save-target",
+					"--api", "http://a-different-target",
+					"--username", "some-username",
+					"--password", "stuff",
+					"--cert", "~/path/to/different/cert",
+					"--github-personal-access-token", "some-token",
 					"some-update-target",
 				)
 
@@ -169,15 +175,19 @@ targets:
 				Expect(string(flyrcBytes)).To(ContainSubstring("password: stuff"))
 				Expect(string(flyrcBytes)).To(ContainSubstring("api: http://a-different-target"))
 				Expect(string(flyrcBytes)).To(ContainSubstring("cert: ~/path/to/different/cert"))
+				Expect(string(flyrcBytes)).To(ContainSubstring("githubpersonalaccesstoken: some-token"))
 			})
 		})
 	})
 
 	Context("when no .flyrc exists", func() {
 		It("should create the file and write the target", func() {
-			flyCmd := exec.Command(flyPath, "save-target", "--api",
-				"http://some-target", "--username", "some-username",
-				"--password", "some-password", "--cert", "~/path/to/cert",
+			flyCmd := exec.Command(flyPath, "save-target",
+				"--api", "http://some-target",
+				"--username", "some-username",
+				"--password", "some-password",
+				"--cert", "~/path/to/cert",
+				"--github-personal-access-token", "some-token",
 				"some-target",
 			)
 
@@ -202,6 +212,7 @@ targets:
 				{Key: "username", Value: "some-username"},
 				{Key: "password", Value: "some-password"},
 				{Key: "cert", Value: "~/path/to/cert"},
+				{Key: "githubpersonalaccesstoken", Value: "some-token"},
 			}))
 
 		})

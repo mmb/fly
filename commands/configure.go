@@ -26,6 +26,7 @@ func Configure(c *cli.Context) {
 	var paused PipelineAction
 
 	target := returnTarget(c.GlobalString("target"))
+
 	insecure := c.GlobalBool("insecure")
 	configPath := c.String("config")
 	asJSON := c.Bool("json")
@@ -48,7 +49,7 @@ func Configure(c *cli.Context) {
 	}
 
 	apiRequester := newAtcRequester(target, insecure)
-	webRequestGenerator := rata.NewRequestGenerator(target, atcroutes.Routes)
+	webRequestGenerator := rata.NewRequestGenerator(target.URL, atcroutes.Routes)
 
 	atcConfig := ATCConfig{
 		pipelineName:        pipelineName,
