@@ -65,7 +65,7 @@ func (command *WorkersCommand) Execute([]string) error {
 		)
 	}
 
-	table := Table{headers}
+	table := Table{Data: []TableRow{headers}}
 
 	sort.Sort(byWorkerName(workers))
 
@@ -88,7 +88,7 @@ func (command *WorkersCommand) Execute([]string) error {
 			row = append(row, stringOrNone(strings.Join(resourceTypes, ", ")))
 		}
 
-		table = append(table, row)
+		table.Data = append(table.Data, row)
 	}
 
 	fmt.Print(table.Render())

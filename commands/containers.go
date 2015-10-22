@@ -56,7 +56,7 @@ func (command *ContainersCommand) Execute([]string) error {
 		{Contents: "worker", Color: color.New(color.Bold)},
 	}
 
-	table := Table{headers}
+	table := Table{Data: []TableRow{headers}}
 
 	sort.Sort(byHandle(containers))
 
@@ -70,7 +70,7 @@ func (command *ContainersCommand) Execute([]string) error {
 			{Contents: c.WorkerName},
 		}
 
-		table = append(table, row)
+		table.Data = append(table.Data, row)
 	}
 
 	fmt.Print(table.Render())

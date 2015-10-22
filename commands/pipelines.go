@@ -46,9 +46,11 @@ func (command *PipelinesCommand) Execute([]string) error {
 	}
 
 	table := Table{
-		{
-			{Contents: "name", Color: color.New(color.Bold)},
-			{Contents: "paused", Color: color.New(color.Bold)},
+		Data: []TableRow{
+			{
+				{Contents: "name", Color: color.New(color.Bold)},
+				{Contents: "paused", Color: color.New(color.Bold)},
+			},
 		},
 	}
 
@@ -61,7 +63,7 @@ func (command *PipelinesCommand) Execute([]string) error {
 			pausedColumn.Contents = "no"
 		}
 
-		table = append(table, []TableCell{
+		table.Data = append(table.Data, []TableCell{
 			{Contents: p.Name},
 			pausedColumn,
 		})
