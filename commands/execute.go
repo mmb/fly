@@ -190,11 +190,6 @@ func determineInputs(
 			Name: filepath.Base(wd),
 			Path: wd,
 		})
-	} else {
-		err := inputValidation(inputMappings, taskInputs)
-		if err != nil {
-			return nil, err
-		}
 	}
 
 	inputsFromLocal, err := generateLocalInputs(client, inputMappings)
@@ -220,10 +215,15 @@ func determineInputs(
 		inputs = append(inputs, input)
 	}
 
+		err = inputValidation(inputs, taskInputs)
+		if err != nil {
+			return nil, err
+		}
+
 	return inputs, nil
 }
 
-func inputValidation(inputs []InputPairFlag, validInputs []atc.TaskInputConfig) error {
+func inputValidation(inputs []Input, validInputs []atc.TaskInputConfig) error {
 
 	for _, input := range inputs {
 		name := input.Name
@@ -231,10 +231,25 @@ func inputValidation(inputs []InputPairFlag, validInputs []atc.TaskInputConfig) 
 			return fmt.Errorf("unknown input `%s`", name)
 		}
 	}
+	//all the names in valid inputs checked off
+	for _, require := range validInputs {
+		if !containsRequirements(inputs, require.Name) {
+			return fmt.Errorf("missing required input `%s`", require.Name)
+		}
+	}
 	return nil
 }
 
 func containsInput(inputs []atc.TaskInputConfig, name string) bool {
+	for _, input := range inputs {
+		if input.Name == name {
+			return true
+		}
+	}
+	return false
+}
+
+func containsRequirements(inputs []Input, name string) bool {
 	for _, input := range inputs {
 		if input.Name == name {
 			return true
